@@ -20,7 +20,7 @@ std::string User::getName()
 
 bool User::isadmin()
 {
-    return isadmin;
+    return this->isAdmin;
 }
 
 void User::setisadmin(bool isadmin)
