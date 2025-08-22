@@ -44,3 +44,4 @@
 # executable
 ft_irc
 obj/
+.vscode/
