@@ -16,6 +16,7 @@ class Channel
         Channel(std::string pass);
         std::string getPass();
         void addUser(User user);
+        bool isFound(User user);
         bool validatePass(std::string pass);
 };
 
