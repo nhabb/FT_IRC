@@ -17,10 +17,10 @@ class Channel
         std::string getPass();
         void addUser(User user);
         bool isFound(User user);
-        bool validatePass(std::string pass);
 };
 
 bool checkChars(std::string pass,int size);
 bool validChar(char c);
-        bool validatePass(std::string pass);;
+bool checkPort(char *port);
+bool validatePass(std::string pass);
 #endif

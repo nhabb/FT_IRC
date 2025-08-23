@@ -28,7 +28,7 @@ void Channel::addUser(User user)
 
 bool Channel::isFound(User user)
 {
-    for (int i = 0 ; i < users.size(); i++)
+    for (int i = 0 ; i < (int)users.size(); i++)
     {
         if (users[i].getName() == user.getName() && users[i].getNick() == user.getNick())
             return true;

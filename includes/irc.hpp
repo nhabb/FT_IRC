@@ -1,6 +1,8 @@
 #ifndef IRC_HPP
 #define IRC_HPP
 #include <iostream>
+#include <cstring>
+#include <cstdlib>
 #include "../src/Channel.hpp"
 #include "../src/User.hpp"
 

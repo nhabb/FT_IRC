@@ -39,3 +39,10 @@ bool validChar(char c)
 {
     return c == '_' || c == '-' || c == '$' || c == '@';
 }
+
+bool checkPort(char *port)
+{
+    if (std::atoi(port) >= 1024 && std::atoi(port) <= 65535)
+        return true;
+    return false;
+}

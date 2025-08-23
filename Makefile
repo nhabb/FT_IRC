@@ -4,7 +4,8 @@ CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 NAME     = ircserv
 SRCS     = src/main.cpp \
 		   src/Channel.cpp \
-		   src/User.cpp
+		   src/User.cpp \
+		   src/Validation.cpp 
 OBJS     = $(SRCS:src/%.cpp=obj/%.o)
 
 all: $(NAME)
