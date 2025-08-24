@@ -6,6 +6,7 @@
     * alphanumeric
     * _ - $ @ are the only allowed non alphanumeric characters
 */
+bool validChar(char c);
 
 bool checkChars(char c) 
 {
