@@ -10,7 +10,7 @@ int main(int argc, char **argv)
     }
     if (checkPort(argv[1]) && validatePass(argv[2]))
     {
-        std::cout<<"Sever created. Welcome to IRCSSSSSS"<<std::endl;
+        Server Server(argv[1],argv[2]);
     }
     else
     {

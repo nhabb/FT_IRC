@@ -3,7 +3,7 @@
 
 Channel::Channel(std::string pass)
 {
-    // this->userCount = 0;
+    this->userCount = 0;
     this->pass = pass;
 }
 
@@ -12,9 +12,19 @@ std::string Channel::getPass()
     return this->pass;
 }
 
+std::string Channel::getName()
+{
+    return this->name;
+}
+
+void Channel::setName(std::string name)
+{
+    this->name = name;
+}
+
 void Channel::addUser(User user)
 {
-    // userCount++;
+    userCount++;
     if (!isFound(user))
     {
         this->users.push_back(user);

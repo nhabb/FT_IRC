@@ -11,16 +11,16 @@ class Channel
     private:
         std::vector<User> users;
         std::string pass;
+        std::string name;
     public:
-        // static int userCount;
+        int userCount;
         Channel(std::string pass);
         std::string getPass();
         void addUser(User user);
         bool isFound(User user);
+        std::string getName();
+        void setName(std::string name);
 };
 
-bool checkChars(std::string pass,int size);
-bool validChar(char c);
-bool checkPort(char *port);
-bool validatePass(std::string pass);
+
 #endif

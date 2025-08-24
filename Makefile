@@ -5,7 +5,8 @@ NAME     = ircserv
 SRCS     = src/main.cpp \
 		   src/Channel.cpp \
 		   src/User.cpp \
-		   src/Validation.cpp 
+		   src/Validation.cpp \
+		   src/Server.cpp 
 OBJS     = $(SRCS:src/%.cpp=obj/%.o)
 
 all: $(NAME)
