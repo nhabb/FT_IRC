@@ -1,4 +1,4 @@
-#include "Channel.hpp"
+#include "../includes/irc.hpp"
 
 Channel::Channel(std::string pass)
     : pass(pass), name(""),

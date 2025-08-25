@@ -1,4 +1,4 @@
-#include "Server.hpp"
+#include "../includes/irc.hpp"
 #include <iostream>
 #include <sstream>
 
@@ -116,8 +116,85 @@ void Server::handleMode(User &sender, std::vector<std::string> &args) {
     broadcastMode(channel, sender.getNick(), modeString);
 }
 
+void parseCommand(const std::string &line, std::string &cmd, std::vector<std::string> &args) {
+    args.clear();
+    cmd.clear();
+
+    std::istringstream iss(line);
+    std::string token;
+
+    if (!(iss >> cmd))
+        return;
+    while (iss >> token) {
+        if (!token.empty() && token[0] == ':') {
+            std::string trailing = token.substr(1);
+            std::string rest;
+            std::getline(iss, rest);
+            if (!rest.empty() && rest[0] == ' ')
+                rest.erase(0, 1);
+			args.push_back(trailing + (rest.empty() ? "" : " " + rest));
+            break;
+        } else {
+            args.push_back(token);
+        }
+    }
+}
+
 void Server::handleCommand(User &user, const std::string &cmd, std::vector<std::string> &args) {
-    if (cmd == "MODE") {
+    if (cmd == "PASS") {
+        if (args.size() < 1) {
+            std::cout << "Error: PASS requires a password" << std::endl;
+            return;
+        }
+        if (args[0] != this->pass) {
+            std::cout << "Error: Invalid password" << std::endl;
+            return;
+        }
+        std::cout << "Password accepted for user " << user.getNick() << std::endl;
+    }
+    else if (cmd == "NICK") {
+        if (args.size() < 1) {
+            std::cout << "Error: NICK requires a nickname" << std::endl;
+            return;
+        }
+        user.setnick(args[0]);
+        std::cout << "User set nickname to " << args[0] << std::endl;
+    }
+    else if (cmd == "USER") {
+        if (args.size() < 4) {
+            std::cout << "Error: USER requires 4 parameters" << std::endl;
+            return;
+        }
+        user.setname(args[0]);
+        std::cout << "User " << args[0] << " registered (real name: " << args[3] << ")" << std::endl;
+    }
+    else if (cmd == "JOIN") {
+        if (args.size() < 1) {
+            std::cout << "Error: JOIN requires a channel name" << std::endl;
+            return;
+        }
+        std::string channelName = args[0];
+        Channel *channel = getChannelByName(channelName);
+        if (!channel) {
+            Channel newChannel("");
+            newChannel.setName(channelName);
+            newChannel.addOperator(user.getNick());
+            addChannel(newChannel);
+            std::cout << "Channel created: " << channelName << std::endl;
+        }
+        std::cout << user.getNick() << " joined " << channelName << std::endl;
+    }
+    else if (cmd == "PRIVMSG") {
+        if (args.size() < 2) {
+            std::cout << "Error: PRIVMSG requires a target and message" << std::endl;
+            return;
+        }
+        std::cout << user.getNick() << " -> " << args[0] << ": " << args[1] << std::endl;
+    }
+    else if (cmd == "MODE") {
         handleMode(user, args);
+    }
+    else {
+        std::cout << "Error: Unknown command " << cmd << std::endl;
     }
 }

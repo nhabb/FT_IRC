@@ -8,12 +8,12 @@
 */
 bool validChar(char c);
 
-bool checkChars(char c) 
+bool checkChars(char c)
 {
     return isalnum(c) || validChar(c);
 }
 
-bool validatePass(std::string pass) 
+bool validatePass(std::string pass)
 {
     int size = (int)pass.size();
     if (size < 10)
