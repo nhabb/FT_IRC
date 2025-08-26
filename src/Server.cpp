@@ -30,7 +30,8 @@ void Server::addChannel(Channel channel)
 
 }
 
-void Server::createChannel()
+void Server::createChannel(std::string name, std:: string pass)
 {
-    
+    Channel channel(name,pass);
+    addChannel (channel);
 }

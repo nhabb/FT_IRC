@@ -13,7 +13,7 @@ class Server
         Server(char *port,std::string pass);
         void addChannel(Channel channel);
         bool channelFound(Channel channel);
-        void createChannel();
+        void createChannel(std::string name,std::string pass);
 };
 
 bool validChar(char c);

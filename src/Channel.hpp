@@ -14,7 +14,7 @@ class Channel
         std::string name;
     public:
         int userCount;
-        Channel(std::string pass);
+        Channel(std::string name,std::string pass);
         std::string getPass();
         void addUser(User user);
         bool isFound(User user);

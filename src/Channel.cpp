@@ -1,9 +1,10 @@
 #include "Channel.hpp"
 
 
-Channel::Channel(std::string pass)
+Channel::Channel(std::string name,std::string pass)
 {
     this->userCount = 0;
+    this->name = name;
     this->pass = pass;
 }
 
