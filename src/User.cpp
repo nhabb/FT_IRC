@@ -1,4 +1,4 @@
-#include "User.hpp"
+#include "../includes/irc.hpp"
 
 User::User(std::string name, std::string nick)
 {
