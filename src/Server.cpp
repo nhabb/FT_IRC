@@ -179,7 +179,7 @@ void Server::acceptClient()
 
 	// Step-by-step onboarding
 	sendToFd(client_fd, "NOTICE * :Welcome to IRCssssssssssss.\nPlease authenticate: PASS <password>\r\n");
-	sendToFd(client_fd, "Hala bel khamis: ");
+	sendToFd(client_fd, "\033[0;32mft_irc > \033[0m");
 }
 
 void Server::disconnectClient(int fd)
@@ -266,7 +266,7 @@ void Server::handleClientInput(int fd)
 		if (!cmd.empty())
 			handleCommand(*u, cmd, args);
 		// Send prompt after processing each line
-		sendToFd(fd, "Hala bel khamis: ");
+		sendToFd(fd, "\033[0;32mft_irc > \033[0m");
 	}
 }
 
