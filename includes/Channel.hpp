@@ -3,45 +3,56 @@
 
 #include <string>
 #include <vector>
-#include <set>
 #include "User.hpp"
 
 class Channel {
 private:
-    std::vector<User> users;
-    std::string pass;
-    std::string name;
-    bool inviteOnly;
-    bool topicRestricted;
-    std::string key;
-    size_t userLimit;
-    std::set<std::string> operators;
+    std::string        name;
+    std::vector<int>   usersFds;       // store FDs (stable) instead of User* (invalidated by vector reallocs)
+    std::vector<std::string> operators; // nicks of operators
+    bool               inviteOnly;
+    bool               topicRestricted;
+    std::string        key;
+    int                userLimit;      // -1 means no limit
+	std::vector<std::string> inviteList;
+    int                 userCount;
 
 public:
-    int userCount;
+    Channel();
+    Channel(const std::string &n);
 
-    Channel(std::string pass);
+    std::string getName() const;
+    void        setName(std::string n);
 
-    std::string getPass();
-    std::string getName();
-    bool getInviteOnly() const;
-    bool getTopicRestricted() const;
-    std::string getKey() const;
-    size_t getUserLimit() const;
+    // membership
+    void addUserFd(int fd);
+    void removeUserFd(int fd);
+    bool hasUserFd(int fd) const;
+    std::vector<int>&       getUserFds();
+    const std::vector<int>& getUserFds() const;
+
+    // operators
+    void addOperator(const std::string &nick);
     bool isOperator(const std::string &nick) const;
 
-    void setName(std::string name);
-    void setInviteOnly(bool mode);
-    void setTopicRestricted(bool mode);
-    void setKey(const std::string &key);
-    void setUserLimit(size_t limit);
-    void addOperator(const std::string &nick);
+    // modes
+    void setInviteOnly(bool v);
+    bool isInviteOnly() const;
+    void setTopicRestricted(bool v);
+    bool isTopicRestricted() const;
+    void setKey(const std::string &k);
+    std::string getKey() const;
+    void setUserLimit(int l);
+    int  getUserLimit() const;
+	void addInvite(const std::string &nick);
+    bool isInvited(const std::string &nick) const;
+    void clearInvite(const std::string &nick);
+    bool getInviteOnly() const;
+    bool getTopicRestricted() const;
+    std::string findNick(std::vector<std::string> operators, const std::string &nick) const;
     void removeOperator(const std::string &nick);
-
-    void addUser(User user);
-    bool isFound(User user);
-
-    bool canChangeTopic(const std::string &nick) const;
+    // void addUser(User user);
+    // bool isFound(User user);
 };
 
 #endif
