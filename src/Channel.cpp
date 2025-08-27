@@ -22,6 +22,14 @@ bool Channel::getTopicRestricted() const {
     return topicRestricted;
 }
 
+std::string Channel::getTopic() const {
+    return topic;
+}
+
+void Channel::setTopic(const std::string &t) {
+    topic = t;
+}
+
 void Channel::addOperator(const std::string &nick) {
     // avoid duplicates
     if (std::find(operators.begin(), operators.end(), nick) == operators.end())
@@ -35,19 +43,20 @@ void Channel::removeOperator(const std::string &nick) {
         operators.erase(it);
 }
 
-// void Channel::addUser(User user) {
-//     users.push_back(user);
-//     userCount++;
-// }
-
-// bool Channel::isFound(User user) {
-//     for (size_t i = 0; i < users.size(); i++) {
-//         if (users[i].getNick() == user.getNick()) {
-//             return true;
-//         }
-//     }
-//     return false;
-// }
+void Channel::removeOp(std::string nick)
+{
+    size_t i = 0, j = 0;
+    while (i < operators.size())
+    {
+        if (operators[i] != nick)
+        {
+            operators[j] = operators[i];
+            ++j;
+        }
+        ++i;
+    }
+    operators.resize(j);
+}
 
 void Channel::removeUserFd(int fd)
 {
@@ -117,19 +126,4 @@ int Channel::getNumOperators()
 std::string Channel::getNewop()
 {
     return this->operators[0];
-}
-
-void Channel::removeOp(std::string nick)
-{
-    size_t i = 0, j = 0;
-    while (i < operators.size())
-    {
-        if (operators[i] != nick)
-        {
-            operators[j] = operators[i];
-            ++j;
-        }
-        ++i;
-    }
-    operators.resize(j); // << important: shrink the vector
 }

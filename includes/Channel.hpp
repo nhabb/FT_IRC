@@ -14,8 +14,9 @@ private:
     bool               topicRestricted;
     std::string        key;
     int                userLimit;      // -1 means no limit
-	std::vector<std::string> inviteList;
-    int                 userCount;
+    std::vector<std::string> inviteList;
+    int                userCount;
+    std::string        topic;
 
 public:
     Channel();
@@ -52,6 +53,8 @@ public:
     void clearInvite(const std::string &nick);
     bool getInviteOnly() const;
     bool getTopicRestricted() const;
+    std::string getTopic() const;
+    void setTopic(const std::string &t);
     std::string findNick(std::vector<std::string> operators, const std::string &nick) const;
     void removeOperator(const std::string &nick);
     // void addUser(User user);
