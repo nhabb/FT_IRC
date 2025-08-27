@@ -66,3 +66,4 @@ void Channel::clearInvite(const std::string &nick) {
         }
     }
 }
+
