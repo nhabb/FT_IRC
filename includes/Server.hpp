@@ -48,7 +48,8 @@ public:
     void handleMode(User &user, std::vector<std::string> &args); // your existing logic hooks here
 	void handleInvite(User &user, std::vector<std::string> &args);
 	void handleKick(User &user, std::vector<std::string> &args);
-	
+	// In Server.hpp (private or public as you like)
+	std::string pickNextOpNick(Channel* c, const std::string& excludeNick = "");
     // broadcast
     void broadcast(Channel *chan, const std::string &msg, int exceptFd = -1);
     void broadcastMode(Channel *chan, const std::string &setter, const std::string &modeString);

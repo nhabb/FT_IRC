@@ -49,7 +49,8 @@ void Channel::removeOperator(const std::string &nick) {
 //     return false;
 // }
 
-void Channel::removeUserFd(int fd) {
+void Channel::removeUserFd(int fd)
+{
     for (size_t i = 0; i < usersFds.size(); ++i) {
         if (usersFds[i] == fd) { usersFds.erase(usersFds.begin() + i); break; }
     }
@@ -105,4 +106,30 @@ void Channel::clearInvite(const std::string &nick) {
             break;
         }
     }
+}
+
+
+int Channel::getNumOperators()
+{
+    return (int)this->operators.size();
+}
+
+std::string Channel::getNewop()
+{
+    return this->operators[0];
+}
+
+void Channel::removeOp(std::string nick)
+{
+    size_t i = 0, j = 0;
+    while (i < operators.size())
+    {
+        if (operators[i] != nick)
+        {
+            operators[j] = operators[i];
+            ++j;
+        }
+        ++i;
+    }
+    operators.resize(j); // << important: shrink the vector
 }

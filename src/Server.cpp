@@ -176,7 +176,8 @@ void Server::acceptClient()
 	std::cout << "New client connected (User " << client_fd - 3 << ")" << std::endl;
 
 	// Step-by-step onboarding
-	sendToFd(client_fd, "NOTICE * :Welcome to IRCSSSSSSSSSSSS.\nPlease authenticate: PASS <password>\r\n");
+	sendToFd(client_fd, "NOTICE * :Welcome to IRCssssssssssss.\nPlease authenticate: PASS <password>\r\n");
+	sendToFd(client_fd, "Hala bel khamis: ");
 }
 
 void Server::disconnectClient(int fd)
@@ -253,7 +254,6 @@ void Server::handleClientInput(int fd)
 	// process all complete lines (\r\n)
 	std::string line, cmd;
 	std::vector<std::string> args;
-
 	while (u->extractLine(line))
 	{
 		if (line.empty())
@@ -263,6 +263,8 @@ void Server::handleClientInput(int fd)
 		parseCommand(line, cmd, args);
 		if (!cmd.empty())
 			handleCommand(*u, cmd, args);
+		// Send prompt after processing each line
+		sendToFd(fd, "Hala bel khamis: ");
 	}
 }
 
@@ -318,51 +320,57 @@ void Server::handleInvite(User &user, std::vector<std::string> &args)
 
 void Server::handleKick(User &user, std::vector<std::string> &args)
 {
-	if (!user.isRegistered())
-	{
-		sendToFd(user.getFd(), "ERROR :You are not registered\r\n");
-		return;
-	}
-	if (args.size() < 2)
-	{
-		sendToFd(user.getFd(), "ERROR :KICK requires <channel> <nick> [:reason]\r\n");
-		return;
-	}
+    if (!user.isRegistered())
+    { sendToFd(user.getFd(), "ERROR :You are not registered\r\n"); return; }
 
-	const std::string chanName = args[0];
-	const std::string targetNick = args[1];
-	const std::string reason = (args.size() >= 3 ? args[2] : "Kicked");
+    if (args.size() < 2)
+    { sendToFd(user.getFd(), "ERROR :KICK requires <channel> <nick> [:reason]\r\n"); return; }
 
-	Channel *c = getChannelByName(chanName);
-	if (!c)
-	{
-		sendToFd(user.getFd(), "ERROR :No such channel " + chanName + "\r\n");
-		return;
-	}
+    const std::string chanName   = args[0];
+    const std::string targetNick = args[1];
+    const std::string reason     = (args.size() >= 3 ? args[2] : "Kicked");
 
-	if (!c->isOperator(user.getNick()))
-	{
-		sendToFd(user.getFd(), "ERROR :You're not a channel operator\r\n");
-		return;
-	}
+    Channel *c = getChannelByName(chanName);
+    if (!c)
+    { sendToFd(user.getFd(), "ERROR :No such channel " + chanName + "\r\n"); return; }
 
-	User *target = findUserByNick(targetNick);
-	if (!target || !c->hasUserFd(target->getFd()))
-	{
-		sendToFd(user.getFd(), "ERROR :User " + targetNick + " is not on " + chanName + "\r\n");
-		return;
-	}
+    if (!c->isOperator(user.getNick()))
+    { sendToFd(user.getFd(), "ERROR :You're not a channel operator\r\n"); return; }
 
-	// Broadcast KICK to all channel members
-	std::string wire = ":" + user.getNick() + " KICK " + chanName + " " + targetNick + " :" + reason + "\r\n";
-	broadcast(c, wire);
+    User *target = findUserByNick(targetNick);
+    if (!target || !c->hasUserFd(target->getFd()))
+    {
+        sendToFd(user.getFd(), "ERROR :User " + targetNick + " is not on " + chanName + "\r\n");
+        return;
+    }
 
-	// Remove user from channel
-	c->removeUserFd(target->getFd());
+    // 1) Broadcast the KICK (from acting user)
+    std::string kickLine = ":" + user.getNick() + " KICK " + chanName + " " + targetNick + " :" + reason + "\nSallemleeeeee\n";
+    broadcast(c, kickLine);
 
-	// Notify the kicked user directly
-	sendToFd(target->getFd(), wire);
+    // 2) Track if target was an op, then remove from channel and op list
+    const bool targetWasOp = c->isOperator(targetNick);
+    c->removeUserFd(target->getFd());
+    if (targetWasOp) c->removeOp(targetNick);
+
+    // 3) If we removed the last operator, auto-promote next eligible member
+    if (targetWasOp && c->getNumOperators() == 0)
+    {
+        std::string newOp = pickNextOpNick(c, targetNick);
+        if (!newOp.empty())
+        {
+            c->addOperator(newOp);
+            // Announce as server-origin MODE (you've used ":server" elsewhere already)
+            std::string modeLine = ":server MODE " + chanName + " +o " + newOp + "\r\n";
+            broadcast(c, modeLine);
+        }
+        // If no eligible member remains, channel stays with zero ops (allowed)
+    }
+
+    // 4) Optionally notify kicked user directly (they likely already got the broadcast)
+    // sendToFd(target->getFd(), kickLine);
 }
+
 
 void Server::handleCommand(User &user, const std::string &cmd, std::vector<std::string> &args)
 {
@@ -675,16 +683,28 @@ void Server::handleMode(User &user, std::vector<std::string> &args)
 			if (sign == +1)
 			{
 				c->addOperator(opnick);
+				broadcastMode(c, user.getNick(), "+o " + opnick);
 			}
-			else
+			else // -o
 			{
-				// Optional: implement removeOperator in Channel to fully support -o
-				sendToFd(user.getFd(), "ERROR :-o not implemented\r\n");
+				if (!c->isOperator(opnick))
+				{
+					sendToFd(user.getFd(), "ERROR :User " + opnick + " is not an operator\r\n");
+					continue;
+				}
+				c->removeOp(opnick);
+				broadcastMode(c, user.getNick(), "-o " + opnick);
+
+				if (c->getNumOperators() == 0)
+				{
+					std::string newOp = pickNextOpNick(c, opnick);
+					if (!newOp.empty())
+					{
+						c->addOperator(newOp);
+						broadcast(c, ":server MODE " + c->getName() + " +o " + newOp + "\r\n");
+					}
+				}
 			}
-		}
-		else
-		{
-			sendToFd(user.getFd(), "ERROR :Unknown mode flag\r\n");
 		}
 	}
 
@@ -706,4 +726,22 @@ void Server::broadcast(Channel *chan, const std::string &msg, int exceptFd)
 void Server::broadcastMode(Channel *chan, const std::string &setter, const std::string &modeString)
 {
 	broadcast(chan, ":" + setter + " MODE " + chan->getName() + " " + modeString + "\r\n");
+}
+
+
+std::string Server::pickNextOpNick(Channel* c, const std::string& excludeNick)
+{
+    if (!c) return std::string();
+    std::vector<int>& fds = c->getUserFds();   // your existing container
+    for (size_t i = 0; i < fds.size(); ++i)
+    {
+        User* u = findUserByFd(fds[i]);
+        if (!u) continue;
+        const std::string& nick = u->getNick();
+        if (nick.empty()) continue;
+        if (nick == excludeNick) continue;
+        if (!c->isOperator(nick))
+            return nick;                       // first eligible by join order
+    }
+    return std::string();
 }

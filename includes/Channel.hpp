@@ -24,12 +24,15 @@ public:
     std::string getName() const;
     void        setName(std::string n);
 
+    int getNumOperators();
+    std::string getNewop();
     // membership
     void addUserFd(int fd);
     void removeUserFd(int fd);
     bool hasUserFd(int fd) const;
     std::vector<int>&       getUserFds();
     const std::vector<int>& getUserFds() const;
+    void removeOp(std::string nick);
 
     // operators
     void addOperator(const std::string &nick);
