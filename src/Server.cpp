@@ -311,12 +311,13 @@ void Server::handleKick(User &user, std::vector<std::string> &args)
 		sendToFd(user.getFd(), "ERROR :KICK requires <channel> <nick> [:reason]\r\n");
 		return;
 	}
-
+	
 	const std::string chanName = args[0];
 	const std::string targetNick = args[1];
 	const std::string reason = (args.size() >= 3 ? args[2] : "Kicked");
 
 	Channel *c = getChannelByName(chanName);
+	
 	if (!c)
 	{
 		sendToFd(user.getFd(), "ERROR :No such channel " + chanName + "\r\n");
@@ -330,6 +331,7 @@ void Server::handleKick(User &user, std::vector<std::string> &args)
 	}
 
 	User *target = findUserByNick(targetNick);
+	
 	if (!target || !c->hasUserFd(target->getFd()))
 	{
 		sendToFd(user.getFd(), "ERROR :User " + targetNick + " is not on " + chanName + "\r\n");
@@ -341,10 +343,17 @@ void Server::handleKick(User &user, std::vector<std::string> &args)
 	broadcast(c, wire);
 
 	// Remove user from channel
-	c->removeUserFd(target->getFd());
-
+	if (c->isOperator(targetNick) && c->getNumOperators() == 1)
+	{
+		c->removeUserFd(target->getFd());
+		c->removeOp(targetNick);
+		c->addOperator(c->getNewop());
+	}
+	User *target2 = findUserByNick(c->getNewop());
+	std::string add = ":" + (*target2).getNick() + " KICK " + chanName + " " + c->getNewop() + " :" + reason + "\r\n";
 	// Notify the kicked user directly
 	sendToFd(target->getFd(), wire);
+	sendToFd(target2->getFd(), add);
 }
 
 void Server::handleCommand(User &user, const std::string &cmd, std::vector<std::string> &args)
