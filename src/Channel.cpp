@@ -81,19 +81,15 @@ std::string Channel::getNewop()
 
 void Channel::removeOp(std::string nick)
 {
-    int i = 0;
-    int j = 0;
-    while (i < (int)operators.size())
+    size_t i = 0, j = 0;
+    while (i < operators.size())
     {
-        if (operators[i] == nick)
-        {
-            i++;
-        }
-        else
+        if (operators[i] != nick)
         {
             operators[j] = operators[i];
-            i++;
-            j++;
+            ++j;
         }
+        ++i;
     }
+    operators.resize(j); // << important: shrink the vector
 }
