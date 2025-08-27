@@ -10,5 +10,8 @@
 #include "Channel.hpp"
 #include "User.hpp"
 #include "Server.hpp"
+bool checkChars(char c);
+bool validatePass(std::string pass);
+bool checkPort(char *port);
 
 #endif
