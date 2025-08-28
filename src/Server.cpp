@@ -1,14 +1,4 @@
 #include "../includes/Server.hpp"
-#include <iostream>
-#include <sstream>
-#include <cstdlib>
-#include <cstdio>
-#include <cstring>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <poll.h>
 
 // ---------- helpers (finders) ----------
 
@@ -97,30 +87,30 @@ void Server::start()
 	server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (server_fd == -1)
 	{
-		perror("socket");
-		exit(1);
+		std::perror("socket");
+		std::exit(1);
 	}
 
 	if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
 	{
-		perror("setsockopt");
-		exit(1);
+		std::perror("setsockopt");
+		std::exit(1);
 	}
 
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = INADDR_ANY;
-	address.sin_port = htons(atoi(port.c_str()));
+	address.sin_port = htons(std::atoi(port.c_str()));
 
 	if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
 	{
-		perror("bind");
-		exit(1);
+		std::perror("bind");
+		std::exit(1);
 	}
 
 	if (listen(server_fd, MAX_CLIENTS) < 0)
 	{
-		perror("listen");
-		exit(1);
+		std::perror("listen");
+		std::exit(1);
 	}
 
 	struct pollfd pfd;
@@ -135,7 +125,7 @@ void Server::start()
 	{
 		if (poll(&pollfds[0], pollfds.size(), -1) < 0)
 		{
-			perror("poll");
+			std::perror("poll");
 			break;
 		}
 
@@ -163,7 +153,7 @@ void Server::acceptClient()
 	int client_fd = accept(server_fd, (struct sockaddr *)&addr, &addrlen);
 	if (client_fd < 0)
 	{
-		perror("accept");
+		std::perror("accept");
 		return;
 	}
 
@@ -238,7 +228,7 @@ void parseCommand(const std::string &line, std::string &cmd, std::vector<std::st
 void Server::handleClientInput(int fd)
 {
 	char buf[BUFFER_SIZE];
-	memset(buf, 0, BUFFER_SIZE);
+	std::memset(buf, 0, BUFFER_SIZE);
 
 	int n = recv(fd, buf, BUFFER_SIZE - 1, 0);
 	if (n <= 0)
@@ -353,7 +343,7 @@ void Server::handleKick(User &user, std::vector<std::string> &args)
 	// 2) Track if target was an op, then remove from channel and op list
 	const bool targetWasOp = c->isOperator(targetNick);
 	c->removeUserFd(target->getFd());
-	if (targetWasOp) c->removeOp(targetNick);
+	if (targetWasOp) c->removeOperator(targetNick);
 
 	// 3) If we removed the last operator, auto-promote next eligible member
 	if (targetWasOp && c->getNumOperators() == 0)
@@ -707,7 +697,7 @@ void Server::handleMode(User &user, std::vector<std::string> &args)
 					sendToFd(user.getFd(), "ERROR :MODE +l requires a limit\r\n");
 					continue;
 				}
-				c->setUserLimit(atoi(args[argi++].c_str()));
+				c->setUserLimit(std::atoi(args[argi++].c_str()));
 			}
 			else
 			{
@@ -734,7 +724,7 @@ void Server::handleMode(User &user, std::vector<std::string> &args)
 					sendToFd(user.getFd(), "ERROR :User " + opnick + " is not an operator\r\n");
 					continue;
 				}
-				c->removeOp(opnick);
+				c->removeOperator(opnick);
 				broadcastMode(c, user.getNick(), "-o " + opnick);
 
 				if (c->getNumOperators() == 0)

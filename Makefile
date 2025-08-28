@@ -12,23 +12,23 @@ OBJS     = $(SRCS:src/%.cpp=obj/%.o)
 all: $(NAME)
 
 $(NAME): $(OBJS)
-	$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME)
+	@$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME)
 
 obj/%.o: src/%.cpp | obj
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	@$(CXX) $(CXXFLAGS) -c $< -o $@
 
 obj:
-	mkdir -p obj
+	@mkdir -p obj
 
 clean:
-	rm -rf obj
+	@rm -rf obj
 
 fclean: clean
-	rm -f $(NAME)
+	@rm -f $(NAME)
 
 re: fclean all
 
 leaks:
-	valgrind --leak-check=full --show-leak-kinds=all ./$(NAME) 1234 hello123456
+	@valgrind --leak-check=full --show-leak-kinds=all ./$(NAME) 1234 hello123456
 
 .PHONY: all clean fclean re leaks

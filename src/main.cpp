@@ -1,5 +1,4 @@
 #include "../includes/irc.hpp"
-#include <iostream>
 
 int main(int argc, char **argv) {
     if (argc != 3) {

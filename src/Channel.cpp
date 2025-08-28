@@ -1,5 +1,4 @@
 #include "../includes/Channel.hpp"
-#include <algorithm>
 
 Channel::Channel() : inviteOnly(false), topicRestricted(false), userLimit(-1) {}
 Channel::Channel(const std::string &n) : name(n), inviteOnly(false), topicRestricted(false), userLimit(-1) {}
@@ -12,14 +11,6 @@ void Channel::addUserFd(int fd) {
 
 void Channel::setName(std::string n) {
     name = n;
-}
-
-bool Channel::getInviteOnly() const {
-    return inviteOnly;
-}
-
-bool Channel::getTopicRestricted() const {
-    return topicRestricted;
 }
 
 std::string Channel::getTopic() const {
@@ -36,14 +27,7 @@ void Channel::addOperator(const std::string &nick) {
         operators.push_back(nick);
 }
 
-void Channel::removeOperator(const std::string &nick) {
-    std::vector<std::string>::iterator it =
-        std::find(operators.begin(), operators.end(), nick);
-    if (it != operators.end())
-        operators.erase(it);
-}
-
-void Channel::removeOp(std::string nick)
+void Channel::removeOperator(std::string nick)
 {
     size_t i = 0, j = 0;
     while (i < operators.size())
@@ -121,9 +105,4 @@ void Channel::clearInvite(const std::string &nick) {
 int Channel::getNumOperators()
 {
     return (int)this->operators.size();
-}
-
-std::string Channel::getNewop()
-{
-    return this->operators[0];
 }

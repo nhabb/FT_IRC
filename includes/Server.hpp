@@ -1,9 +1,18 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include <string>
-#include <vector>
+// #include <string>
+// #include <vector>
+#include <iostream>
+#include <sstream>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
 #include <poll.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+// #include <sys/socket.h>
+// #include <netinet/in.h>
 #include "User.hpp"
 #include "Channel.hpp"
 

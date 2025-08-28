@@ -1,8 +1,8 @@
 #ifndef CHANNEL_HPP
 #define CHANNEL_HPP
 
-#include <string>
 #include <vector>
+#include <algorithm>
 #include "User.hpp"
 
 class Channel {
@@ -15,7 +15,6 @@ private:
     std::string        key;
     int                userLimit;      // -1 means no limit
     std::vector<std::string> inviteList;
-    int                userCount;
     std::string        topic;
 
 public:
@@ -26,14 +25,14 @@ public:
     void        setName(std::string n);
 
     int getNumOperators();
-    std::string getNewop();
+
     // membership
     void addUserFd(int fd);
     void removeUserFd(int fd);
     bool hasUserFd(int fd) const;
     std::vector<int>&       getUserFds();
     const std::vector<int>& getUserFds() const;
-    void removeOp(std::string nick);
+    void removeOperator(std::string nick);
 
     // operators
     void addOperator(const std::string &nick);
@@ -51,14 +50,8 @@ public:
 	void addInvite(const std::string &nick);
     bool isInvited(const std::string &nick) const;
     void clearInvite(const std::string &nick);
-    bool getInviteOnly() const;
-    bool getTopicRestricted() const;
     std::string getTopic() const;
     void setTopic(const std::string &t);
-    std::string findNick(std::vector<std::string> operators, const std::string &nick) const;
-    void removeOperator(const std::string &nick);
-    // void addUser(User user);
-    // bool isFound(User user);
 };
 
 #endif

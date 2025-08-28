@@ -1,6 +1,6 @@
 #include "../includes/irc.hpp"
 
-//pass rules
+// Forward declaration
 /*
     * min len 10 characters
     * alphanumeric
