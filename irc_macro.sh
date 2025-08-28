@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# Automate an IRC handshake via nc, then exit with SIGINT.
-# Usage: ./irc_macro.sh [host] [port]
-# Defaults: host=localhost, port=1234
+# irc_macro.sh — automate an IRC session, then exit by closing stdin + SIGINT.
+# Usage: ./irc_macro.sh [host] [port]   (defaults: localhost 1234)
 
 set -Eeuo pipefail
 trap '' PIPE
@@ -17,39 +16,37 @@ CHAN="#channel1"
 TOPIC1="hafadssss"
 KICK_NICK="hady"
 
-# Make a unique FIFO and ensure cleanup
 FIFO="$(mktemp -u /tmp/irc_fifo.XXXXXX)"
 cleanup() {
-  # Close writer FD if open
   { exec 3>&-; } 2>/dev/null || true
-  # Kill nc if still running
   [[ -n "${NC_PID:-}" ]] && kill "$NC_PID" 2>/dev/null || true
-  # Remove fifo
   [[ -p "$FIFO" ]] && rm -f "$FIFO" || true
 }
 trap cleanup EXIT
 
 mkfifo "$FIFO"
 
-# Start nc in the background; it reads from the FIFO and writes to your terminal.
-# We add a short connect timeout (-w 3) if your nc supports it; harmless if not.
-if nc -h 2>&1 | grep -q -- '-w '; then
-  nc "$HOST" "$PORT" -w 3 <"$FIFO" &
-else
-  nc "$HOST" "$PORT" <"$FIFO" &
-fi
+# Build best netcat command available
+NC_CMD=(nc)
+if nc -h 2>&1 | grep -qE '(^| )-C( |,|$)'; then NC_CMD+=(-C); fi
+if nc -h 2>&1 | grep -qE '(^| )-q( |,|$)'; then NC_CMD+=(-q 0); fi   # exit on stdin EOF
+if nc -h 2>&1 | grep -q -- '-w ';       then NC_CMD+=(-w 3);  fi
+
+# Prefer ncat if present (handles CRLF reliably)
+if command -v ncat >/dev/null 2>&1; then NC_CMD=(ncat --crlf); fi
+
+# Start nc in background: it reads from FIFO, writes to terminal
+"${NC_CMD[@]}" "$HOST" "$PORT" <"$FIFO" &
 NC_PID=$!
 
-# Give nc a moment to connect; bail if it died (e.g., connection refused)
 sleep 0.12
 if ! kill -0 "$NC_PID" 2>/dev/null; then
-  echo "[irc_macro] Unable to connect to ${HOST}:${PORT} (nc exited)" >&2
+  echo "[irc_macro] Unable to connect to ${HOST}:${PORT}" >&2
   exit 1
 fi
 
-# Keep the FIFO open for writing via FD 3 (prevents premature EOF to nc)
+# Keep FIFO open for writing via FD 3
 exec 3>"$FIFO"
-
 send() { printf '%s\r\n' "$*" >&3; }
 
 # === Scripted IRC dialogue ===
@@ -61,11 +58,16 @@ sleep 0.10; send "TOPIC ${CHAN} ${TOPIC1}"
 sleep 0.10; send "TOPIC ${CHAN}"
 sleep 0.10; send "KICK ${CHAN} ${KICK_NICK}"
 
-# Let responses flush, then send Ctrl-C (SIGINT) to nc
-sleep 0.30
-kill -INT "$NC_PID" 2>/dev/null || true
+echo
 
-# Close writer so nc can exit, then wait a beat
+# Close stdin to nc (if it supports -q 0, it'll exit immediately)
+sleep 0.20
 exec 3>&- 2>/dev/null || true
-sleep 0.10
+
+# If still alive, escalate: SIGINT → TERM → KILL
+for sig in INT TERM KILL; do
+  sleep 0.20
+  kill -0 "$NC_PID" 2>/dev/null || break
+  kill -"$sig" "$NC_PID" 2>/dev/null || true
+done
 wait "$NC_PID" 2>/dev/null || true
