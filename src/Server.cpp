@@ -12,6 +12,7 @@ User *Server::findUserByFd(int fd)
 
 User *Server::findUserByNick(const std::string &nick)
 {
+	
 	for (size_t i = 0; i < clients.size(); ++i)
 		if (clients[i].getNick() == nick)
 			return &clients[i];
@@ -85,6 +86,13 @@ void Server::start()
 	int opt = 1;
 
 	server_fd = socket(AF_INET, SOCK_STREAM, 0);
+	User bot;
+	bot.setAuth(true);
+	bot.setNick("Marvin");
+	bot.setReal("Marvin_2.0");
+	bot.setRegistered(true);
+	clients.push_back(bot);
+	std::cout<<bot.getNick()<<" created,chat ,play and much more"<<std::endl;
 	if (server_fd == -1)
 	{
 		std::perror("socket");
@@ -93,7 +101,8 @@ void Server::start()
 
 	if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
 	{
-		std::perror("setsockopt");
+		std::perror("setsockopt");	if (server_fd == -1)
+
 		std::exit(1);
 	}
 
@@ -169,7 +178,6 @@ void Server::acceptClient()
 
 	// Step-by-step onboarding
 	sendToFd(client_fd, "NOTICE * :Welcome to IRCssssssssssss.\nPlease authenticate: PASS <password>\r\n");
-	sendToFd(client_fd, "\033[0;32mft_irc > \033[0m");
 }
 
 void Server::disconnectClient(int fd)
@@ -256,7 +264,6 @@ void Server::handleClientInput(int fd)
 		if (!cmd.empty())
 			handleCommand(*u, cmd, args);
 		// Send prompt after processing each line
-		sendToFd(fd, "\033[0;32mft_irc > \033[0m");
 	}
 }
 
@@ -554,6 +561,8 @@ void Server::handleJoin(User &user, std::vector<std::string> &args)
 
 void Server::handlePrivmsg(User &user, std::vector<std::string> &args)
 {
+	if (args[0] == "Marvin")
+		talkToMarvin(user,args[1]);
 	if (!user.isRegistered())
 	{
 		sendToFd(user.getFd(), "ERROR :You are not registered\r\n");
@@ -596,6 +605,61 @@ void Server::handlePrivmsg(User &user, std::vector<std::string> &args)
 		std::string wire = ":" + user.getNick() + " PRIVMSG " + target + " :" + message + "\r\n";
 		sendToFd(dst->getFd(), wire);
 	}
+}
+
+void Server::playRPS(User &user,std::string msg)
+{
+	std::vector<std::string> moves;
+    moves.push_back("ROCK");
+    moves.push_back("PAPER");
+    moves.push_back("SCISSORS");
+    srand(time(NULL));
+    int n = rand() % 3;
+    std::string serverMove = moves[n];
+    std::string result;
+    if (msg == serverMove)
+        result = "DRAW!";
+    else if ((msg == "ROCK"     && serverMove == "SCISSORS") ||
+             (msg == "PAPER"    && serverMove == "ROCK") ||
+             (msg == "SCISSORS" && serverMove == "PAPER"))
+        result = "YOU WIN!";
+    else
+        result = "YOU LOSE!";
+    sendToFd(user.getFd(), "You played: " + msg + "\n");
+    sendToFd(user.getFd(), "Marvin played: " + serverMove + "\n");
+    sendToFd(user.getFd(), result + "\n");
+}
+
+void Server::talkToMarvin(User &user,std::string msg)
+{
+	if (msg == "ROCK" || msg == "PAPER" || msg == "SCISORS")
+		playRPS(user,msg);
+	else if (msg == "HELLO")
+		sendToFd(user.getFd(),"Marvin: Hey\r\n");
+	else if (msg == "TEST")
+		sendToFd(user.getFd(),"Marvin_2.0 at your service\r\n");
+	else if (msg == "HELPCOMM")
+	{
+		sendToFd(user.getFd(),"Marvin: PASS <password>\r\n");
+		sendToFd(user.getFd(),"Marvin: NICK <nickname>\r\n");
+		sendToFd(user.getFd(),"Marvin: USER <username> 0 *:<name>\r\n");
+		sendToFd(user.getFd(),"Marvin: JOIN #channel name\r\n");
+		sendToFd(user.getFd(),"Marvin: PRIVMSG <user/channel> message\r\n");
+		sendToFd(user.getFd(),"Marvin: MODE <channel name> mode\r\n");
+		sendToFd(user.getFd(),"Marvin: KICK <channel name> <nick>\r\n");
+		sendToFd(user.getFd(),"Marvin: INVITE <nick> <channel name>\r\n");
+		sendToFd(user.getFd(),"Marvin: TOPIC <channel> <topic>\r\n");
+	}
+	else if (msg == "HELP")
+	{
+		sendToFd(user.getFd(),"Marvin: <ROCK/PAPER/SCISORS> to play\r\n");
+		sendToFd(user.getFd(),"Marvin: <HELP> to get Marvin help\r\n");
+		sendToFd(user.getFd(),"Marvin: <HELPCOM> to learn how to use the conmands\r\n");
+		sendToFd(user.getFd(),"Marvin: <HEY> to chat with Marvin\r\n");
+		sendToFd(user.getFd(),"Marvin: <TEST> to see if Marvin is active\r\n");
+	}
+	else
+		sendToFd(user.getFd(),"Marvin_2.0 is still under development....\r\n");
 }
 
 void Server::handleMode(User &user, std::vector<std::string> &args)

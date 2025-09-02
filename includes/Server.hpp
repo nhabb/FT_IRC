@@ -58,6 +58,8 @@ public:
 	void handleInvite(User &user, std::vector<std::string> &args);
 	void handleKick(User &user, std::vector<std::string> &args);
     void handleTopic(User &user, std::vector<std::string> &args);
+    void talkToMarvin(User &user,std::string msg);
+    void playRPS(User &user,std::string msg);
 	// In Server.hpp (private or public as you like)
 	std::string pickNextOpNick(Channel* c, const std::string& excludeNick = "");
     // broadcast
